@@ -7,14 +7,16 @@ Content: VGG Implementation
 """
 
 import tensorflow as tf
+import data as dataset
 
 learning_rate = 0.001
-training_iterations = 100
+training_iterations = 50000
 batch_size = 128
 show_step = 10
 
 image_size = 32 * 32 * 3
 image_classes = 100
+test_step = 100
 
 image = tf.placeholder(float, [None, image_size], name='image')
 label = tf.placeholder(float, [None, image_classes], name='label')
@@ -44,10 +46,6 @@ def maxpool(name, x, pool_size, stride):
 
 def init_bias(dim):
     return tf.Variable(tf.random_normal(dim))
-
-def init_weights(shape):
-    return tf.Variable(tf.random_normal(shape,stddev=0.0001))
-
 
 def fc(name, x, inputSize, outputSize):
     weights = init_weights([inputSize, outputSize])
@@ -111,9 +109,25 @@ accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 init = tf.global_variables_initializer()
 
 
+path = '~/Dev/DeepLearning/Paddle/DeepLearningWithPaddle/GoogLeNet/data'
+cifar = dataset.CIFAR(path + 'train', path + 'test')
+
 with tf.Session() as sess:
     sess.run(init)
 
     step = 1
-    
+
+    while step * batch_size < training_iterations:
+        batch_images, batch_labels = cifar.next_batch(batch_size)
+        sess.run(optimizer, feed_dict={'image': batch_images, 'label': batch_labels})
+        if step % show_step == 0:
+            loss, acc = sess.run([cost, accuracy], feed_dict={'image': batch_images, 'label': batch_labels})
+            print("[Iter %s] LOSS=%s Train Accuracy=%s\n" % (step * batch_size, cost, accuracy))
+        if step % test_step == 0:
+            batch_test_images, batch_test_labels = cifar.test_batch(128)
+            print("[Testing Accuracy]: %s" % (sess.run(accuracy, feed_dict={'image': batch_test_images, 'label': batch_test_labels})))
+        step += 1
+
+    print("Optimize Finished")
+
 
