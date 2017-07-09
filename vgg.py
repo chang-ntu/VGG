@@ -47,6 +47,7 @@ def maxpool(name, x, pool_size, stride):
 def init_bias(dim):
     return tf.Variable(tf.random_normal(dim))
 
+
 def fc(name, x, inputSize, outputSize):
     weights = init_weights([inputSize, outputSize])
     bias = init_bias([outputSize])
@@ -124,10 +125,10 @@ with tf.Session() as sess:
         sess.run(optimizer, feed_dict={image: batch_images, label: batch_labels})
         if step % show_step == 0:
             loss, acc = sess.run([cost, accuracy], feed_dict={image: batch_images, label: batch_labels})
-            print("[Iter %s] LOSS=%s Train Accuracy=%s\n" % (step * batch_size, cost, accuracy))
+            print("[Iter %s] LOSS=%.3f Train Accuracy=%.3f\n" % (step * batch_size, loss, acc))
         if step % test_step == 0:
             batch_test_images, batch_test_labels = cifar.test_batch(128)
-            print("[Testing Accuracy]: %s" % (sess.run(accuracy, feed_dict={image: batch_test_images, label: batch_test_labels})))
+            print("[Testing Accuracy]: %.3f" % (sess.run(accuracy, feed_dict={image: batch_test_images, label: batch_test_labels})))
         step += 1
 
     print("Optimize Finished")

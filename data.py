@@ -40,18 +40,16 @@ class CIFAR(object):
 
     def dense_to_one_hot(self, labels_dense, num_classes=100):
         """Convert class labels from scalars to one-hot vectors."""
-        num_labels = 1
-        index_offset = np.arange(num_labels) * num_classes
-        labels_one_hot = np.zeros((num_labels, num_classes))
-        labels_one_hot.flat[index_offset + labels_dense.ravel()] = 1
-        return labels_one_hot
+        arr = [0] * num_classes
+        arr[labels_dense] = 1
+        return np.array(arr)
+
 
     def next_batch(self, batch_size):
         start = self._current_index
         self._current_index += batch_size
         end = self._current_index
         return self.train_images[start:end], [self.dense_to_one_hot(x) for x in self.train_labels[start:end]]
-
 
     def test_batch(self, batch_size):
         start = self._test_index
