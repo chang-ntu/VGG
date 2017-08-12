@@ -10,7 +10,7 @@ import tensorflow as tf
 import data as dataset
 
 learning_rate = 0.001
-training_iterations = 50000
+training_iterations = 50
 batch_size = 128
 show_step = 10
 
@@ -86,15 +86,14 @@ def vgg(x):
 
     pool_5 = maxpool('pool_5', conv_13, 2, 2)
     # 1
-    print pool_5.shape
     pool_5 = tf.reshape(pool_5, [-1, 512])
-    print pool_5.shape
     fc_1 = fc('fc_1', pool_5, 512, 4096)
     fc_2 = fc('fc_2', fc_1, 4096, 4096)
     fc_3 = fc('fc_3', fc_2, 4096, 1000)
     weights = init_weights([1000, 100])
     bias = init_bias([100])
-    output = tf.matmul(fc_3, weights)
+    output = tf.matmul(fc_3, weights)+bias
+    output = tf.nn.softmax(output)
     return output
 
 
@@ -102,7 +101,7 @@ pred = vgg(image)
 
 
 # loss + optimize
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=label))
+cost = -tf.reduce_sum(-label*tf.log(pred))
 optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate, momentum=0.9).minimize(cost)
 
 correct_pred = tf.equal(tf.argmax(pred, 1), tf.argmax(label, 1))
@@ -117,12 +116,13 @@ cifar = dataset.CIFAR(path + 'train', path + 'test')
 
 with tf.Session() as sess:
     sess.run(init)
-
     step = 1
 
-    while step * batch_size < training_iterations:
-        batch_images, batch_labels = cifar.next_batch(batch_size)
-        sess.run(optimizer, feed_dict={image: batch_images, label: batch_labels})
+    while step < training_iterations:
+
+        for i in range(1+50000/batch_size):
+            batch_images, batch_labels = cifar.next_batch(batch_size)
+            sess.run(optimizer, feed_dict={image: batch_images, label: batch_labels})
         if step % show_step == 0:
             loss, acc = sess.run([cost, accuracy], feed_dict={image: batch_images, label: batch_labels})
             print("[Iter %s] LOSS=%.3f Train Accuracy=%.3f\n" % (step * batch_size, loss, acc))
@@ -131,6 +131,5 @@ with tf.Session() as sess:
             print("[Testing Accuracy]: %.3f" % (sess.run(accuracy, feed_dict={image: batch_test_images, label: batch_test_labels})))
         step += 1
 
-    print("Optimize Finished")
 
 
