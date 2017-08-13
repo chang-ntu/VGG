@@ -16,7 +16,7 @@ show_step = 10
 
 image_size = 32 * 32 * 3
 image_classes = 100
-test_step = 100
+test_step = 1
 
 image = tf.placeholder(tf.float32, [None, image_size], name='image')
 label = tf.placeholder(tf.float32, [None, image_classes], name='label')
@@ -55,6 +55,13 @@ def fc(name, x, inputSize, outputSize):
     return tf.nn.relu(tf.add(fc1, bias))
 
 
+def softmax(x, inputSize, outputSize):
+    weights = init_weights([inputSize, outputSize])
+    bias = init_bias([outputSize])
+    fc1 = tf.matmul(x, weights)
+    return tf.nn.softmax(tf.add(fc1, bias))
+
+
 def vgg(x):
     x = tf.reshape(x, shape=[-1, 32, 32, 3])
     # 32
@@ -90,10 +97,7 @@ def vgg(x):
     fc_1 = fc('fc_1', pool_5, 512, 4096)
     fc_2 = fc('fc_2', fc_1, 4096, 4096)
     fc_3 = fc('fc_3', fc_2, 4096, 1000)
-    weights = init_weights([1000, 100])
-    bias = init_bias([100])
-    output = tf.matmul(fc_3, weights)+bias
-    output = tf.nn.softmax(output)
+    output = softmax(fc_3, 1000, 100)
     return output
 
 
@@ -101,15 +105,21 @@ pred = vgg(image)
 
 
 # loss + optimize
-cost = -tf.reduce_sum(-label*tf.log(pred))
-optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate, momentum=0.9).minimize(cost)
+cost = -tf.reduce_sum(label*tf.log(pred))
+optimizer = tf.train.RMSPropOptimizer(
+    learning_rate=0.001,
+    centered=True
+).minimize(cost)
+
+#optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate, momentum=0.9).minimize(cost)
 
 correct_pred = tf.equal(tf.argmax(pred, 1), tf.argmax(label, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
+loss_list = []
+acc_list = []
 
 init = tf.global_variables_initializer()
-
 
 path = '/Users/vic/Dev/DeepLearning/Paddle/DeepLearningWithPaddle/GoogLeNet/data/'
 cifar = dataset.CIFAR(path + 'train', path + 'test')
@@ -119,16 +129,17 @@ with tf.Session() as sess:
     step = 1
 
     while step < training_iterations:
-
         for i in range(1+50000/batch_size):
             batch_images, batch_labels = cifar.next_batch(batch_size)
             sess.run(optimizer, feed_dict={image: batch_images, label: batch_labels})
-        if step % show_step == 0:
-            loss, acc = sess.run([cost, accuracy], feed_dict={image: batch_images, label: batch_labels})
-            print("[Iter %s] LOSS=%.3f Train Accuracy=%.3f\n" % (step * batch_size, loss, acc))
-        if step % test_step == 0:
-            batch_test_images, batch_test_labels = cifar.test_batch(128)
-            print("[Testing Accuracy]: %.3f" % (sess.run(accuracy, feed_dict={image: batch_test_images, label: batch_test_labels})))
+            if i % 5 == 0:
+                train_acc = sess.run(accuracy, feed_dict={image: batch_images, label: batch_labels})
+                loss = sess.run(cost, feed_dict={image: batch_images, label: batch_labels})
+                loss_list.append(loss)
+                acc_list.append(train_acc)
+                print("[Iter %s|Batch %s] LOSS=%.3f Train Accuracy=%.3f" % (step, i+1, loss, train_acc))
+        batch_test_images, batch_test_labels = cifar.test_batch(128)
+        print("[Testing Accuracy]: %.3f" % (sess.run(accuracy, feed_dict={image: batch_test_images, label: batch_test_labels})))
         step += 1
 
 
