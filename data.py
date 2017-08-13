@@ -50,7 +50,6 @@ class CIFAR(object):
         end = self._current_index
         if self._current_index >= len(self.train_images):
             self._current_index = 0
-
         return self.train_images[start:end], [self.dense_to_one_hot(x) for x in self.train_labels[start:end]]
 
     def test_batch(self, batch_size):
