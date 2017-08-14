@@ -197,10 +197,10 @@ output = tf.add(output, parameters['softmax_bias'])
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=output, labels=label))
 #cost = tf.reduce_sum(tf.pow(tf.subtract(pred_logits, label), 2))
 #tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=label, logits=pred_logits))
-adam_op = tf.train.AdamOptimizer(1e-3)
+adam_op = tf.train.MomentumOptimizer(learning_rate=learning_rate, momentum=0.9,use_nesterov=True)
 optimizer = adam_op.minimize(cost)
 
-correct_pred = tf.equal(tf.argmax(output, 1), tf.argmax(label, 1))
+correct_pred = tf.equal(tf.argmax(tf.nn.softmax(logits=output), 1), tf.argmax(label, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
 loss_list = []
