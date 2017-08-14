@@ -197,7 +197,7 @@ output = tf.add(output, parameters['softmax_bias'])
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=output, labels=label))
 #cost = tf.reduce_sum(tf.pow(tf.subtract(pred_logits, label), 2))
 #tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=label, logits=pred_logits))
-adam_op = tf.train.MomentumOptimizer(learning_rate=learning_rate, momentum=0.9,use_nesterov=True)
+adam_op = tf.train.RMSPropOptimizer(learning_rate=learning_rate, momentum=0.9)
 optimizer = adam_op.minimize(cost)
 
 correct_pred = tf.equal(tf.argmax(tf.nn.softmax(logits=output), 1), tf.argmax(label, 1))
@@ -209,7 +209,7 @@ acc_list = []
 #grads_and_vars = adam_op.compute_gradients(cost)
 
 init = tf.global_variables_initializer()
-
+# path = '/home/jurh/disk/temp/cifar100/cifar-100-python/'
 path = '/Users/vic/Dev/DeepLearning/Paddle/DeepLearningWithPaddle/GoogLeNet/data/'
 cifar = dataset.CIFAR(path + 'train', path + 'test')
 
@@ -219,7 +219,7 @@ with tf.Session() as sess:
     while step <= training_iterations:
         for i in range(1+50000/batch_size):
             batch_images, batch_labels = cifar.next_batch(batch_size)
-            _, cost_= sess.run([optimizer, cost], feed_dict={image: batch_images, label: batch_labels})
+            _, cost_ = sess.run([optimizer, cost], feed_dict={image: batch_images, label: batch_labels})
             #gra = sess.run(grads_and_vars, feed_dict={image: batch_images, label: batch_labels})
             #print(gra)
             print("COST: %s" % cost_)
