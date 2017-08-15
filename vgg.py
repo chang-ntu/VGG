@@ -235,7 +235,11 @@ init = tf.global_variables_initializer()
 path = '/Users/vic/Dev/DeepLearning/Paddle/DeepLearningWithPaddle/GoogLeNet/data/'
 cifar = dataset.CIFAR(path + 'train', path + 'test')
 
-with tf.Session() as sess:
+config = tf.ConfigProto(
+        device_count={'GPU': 0}
+)
+
+with tf.Session(config=config) as sess:
     sess.run(init)
     step = 1
     while step <= training_iterations:
