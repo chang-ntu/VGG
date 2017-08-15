@@ -23,11 +23,11 @@ label = tf.placeholder(tf.float32, [None, image_classes], name='label')
 
 
 def init_weights(input_size, output_size):
-    return tf.Variable(tf.truncated_normal([input_size, output_size]))
+    return tf.Variable(tf.truncated_normal([input_size, output_size], stddev=0.1))
 
 
 def init_filter(filter_size, filter_nums, channels):
-    return tf.Variable(tf.truncated_normal([filter_size, filter_size, channels, filter_nums]))
+    return tf.Variable(tf.truncated_normal([filter_size, filter_size, channels, filter_nums], stddev=0.1))
 
 
 def conv2d(name, x, conv_filter, b, stride=1):
@@ -64,7 +64,7 @@ def batch_norm(x):
 
 
 def init_bias(dim):
-    return tf.Variable(tf.truncated_normal([dim]))
+    return tf.Variable(tf.truncated_normal([dim], stddev=1))
 
 
 def fc(name, x, weights, bias):
@@ -234,10 +234,6 @@ init = tf.global_variables_initializer()
 # path = '/home/jurh/disk/temp/cifar100/cifar-100-python/'
 path = '/Users/vic/Dev/DeepLearning/Paddle/DeepLearningWithPaddle/GoogLeNet/data/'
 cifar = dataset.CIFAR(path + 'train', path + 'test')
-
-config = tf.ConfigProto(
-        device_count={'GPU': 0}
-)
 
 with tf.Session(config=config) as sess:
     sess.run(init)
