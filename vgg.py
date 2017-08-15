@@ -23,11 +23,11 @@ label = tf.placeholder(tf.float32, [None, image_classes], name='label')
 
 
 def init_weights(input_size, output_size):
-    return tf.Variable(tf.random_normal([input_size, output_size], stddev=0.1))
+    return tf.Variable(tf.truncated_normal([input_size, output_size]))
 
 
 def init_filter(filter_size, filter_nums, channels):
-    return tf.Variable(tf.random_normal([filter_size, filter_size, channels, filter_nums], stddev=0.1))
+    return tf.Variable(tf.truncated_normal([filter_size, filter_size, channels, filter_nums]))
 
 
 def conv2d(name, x, conv_filter, b, stride=1):
@@ -62,8 +62,9 @@ def batch_norm(x):
         offset=beta
     )
 
+
 def init_bias(dim):
-    return tf.Variable(tf.random_normal([dim], stddev=0.1))
+    return tf.Variable(tf.truncated_normal([dim]))
 
 
 def fc(name, x, weights, bias):
