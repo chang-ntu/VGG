@@ -48,6 +48,20 @@ def maxpool(name, x, pool_size, stride):
                           name=name)
 
 
+def batch_norm(x):
+    batch_mean, batch_var = tf.nn.moments(x, [0, 1, 2], keep_dims=True)
+    scale = tf.Variable(tf.ones([x.get_shape()[-1]]))
+    beta = tf.Variable(tf.zeros([x.get_shape()[-1]]))
+    epsilon = 1e-3
+    return tf.nn.batch_normalization(
+        x,
+        mean=batch_mean,
+        variance=batch_var,
+        scale=scale,
+        variance_epsilon=epsilon,
+        offset=beta
+    )
+
 def init_bias(dim):
     return tf.Variable(tf.random_normal([dim], stddev=0.1))
 
@@ -163,27 +177,34 @@ pool_1 = maxpool('pool_1', conv_2, 2, 2)
 conv_3 = conv2d('conv_3', pool_1, parameters['conv_3_filter'], parameters['conv_3_bias'])
 conv_4 = conv2d('conv_4', conv_3, parameters['conv_4_filter'], parameters['conv_4_bias'])
 pool_2 = maxpool('pool_2', conv_4, 2, 2)
+x = batch_norm(pool_2)
 #   8 * 8 * 128
-conv_5 = conv2d('conv_5', pool_2, parameters['conv_5_filter'], parameters['conv_5_bias'])
+conv_5 = conv2d('conv_5', x, parameters['conv_5_filter'], parameters['conv_5_bias'])
 conv_6 = conv2d('conv_6', conv_5, parameters['conv_6_filter'], parameters['conv_6_bias'])
 conv_7 = conv2d('conv_7', conv_6, parameters['conv_7_filter'], parameters['conv_7_bias'])
 
 pool_3 = maxpool('pool_3', conv_7, 2, 2)
+x = batch_norm(pool_3)
+
 #   4 * 4 * 256
-conv_8 = conv2d('conv_8', pool_3, parameters['conv_8_filter'], parameters['conv_8_bias'])
+conv_8 = conv2d('conv_8', x, parameters['conv_8_filter'], parameters['conv_8_bias'])
 conv_9 = conv2d('conv_9', conv_8, parameters['conv_9_filter'], parameters['conv_9_bias'])
 conv_10 = conv2d('conv_10', conv_9, parameters['conv_10_filter'], parameters['conv_10_bias'])
 pool_4 = maxpool('pool_4', conv_10, 2, 2)
+x = batch_norm(pool_4)
+
 #   2 * 2 * 512
-conv_11 = conv2d('conv_11', pool_4, parameters['conv_11_filter'], parameters['conv_11_bias'])
+conv_11 = conv2d('conv_11', x, parameters['conv_11_filter'], parameters['conv_11_bias'])
 conv_12 = conv2d('conv_12', conv_11, parameters['conv_12_filter'], parameters['conv_12_bias'])
 conv_13 = conv2d('conv_13', conv_12, parameters['conv_13_filter'], parameters['conv_13_bias'])
 
 pool_5 = maxpool('pool_5', conv_13, 2, 2)
+x = batch_norm(pool_5)
+
 #   1 * 1 * 512
-pool_5 = tf.reshape(pool_5, [-1, 512])
+x = tf.reshape(x, [-1, 512])
 #   512
-fc_1 = fc('fc_1', pool_5, parameters['fc_1_weights'], parameters['fc_1_bias'])
+fc_1 = fc('fc_1', x, parameters['fc_1_weights'], parameters['fc_1_bias'])
 fc_2 = fc('fc_2', fc_1, parameters['fc_2_weights'], parameters['fc_2_bias'])
 fc_3 = fc('fc_3', fc_2, parameters['fc_3_weights'], parameters['fc_3_bias'])
 output = tf.matmul(fc_3, parameters['softmax_weights'])
