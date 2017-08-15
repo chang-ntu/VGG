@@ -9,7 +9,7 @@ Content: VGG Implementation
 import tensorflow as tf
 import data as dataset
 
-learning_rate = 0.001
+learning_rate = 0.0001
 training_iterations = 50
 batch_size = 128
 show_step = 10
@@ -221,7 +221,7 @@ cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=output, lab
 adam_op = tf.train.RMSPropOptimizer(learning_rate=learning_rate, momentum=0.9)
 optimizer = adam_op.minimize(cost)
 
-correct_pred = tf.equal(tf.argmax(tf.nn.softmax(logits=output), 1), tf.argmax(label, 1))
+correct_pred = tf.equal(tf.argmax(output, 1), tf.argmax(label, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
 loss_list = []
@@ -240,10 +240,10 @@ with tf.Session() as sess:
     while step <= training_iterations:
         for i in range(1+50000/batch_size):
             batch_images, batch_labels = cifar.next_batch(batch_size)
-            _, cost_ = sess.run([optimizer, cost], feed_dict={image: batch_images, label: batch_labels})
+            sess.run(optimizer, feed_dict={image: batch_images, label: batch_labels})
             #gra = sess.run(grads_and_vars, feed_dict={image: batch_images, label: batch_labels})
             #print(gra)
-            print("COST: %s" % cost_)
+            # print("COST: %s" % cost_)
             if i % 5 == 0:
                 train_acc = sess.run(accuracy, feed_dict={image: batch_images, label: batch_labels})
                 loss = sess.run(cost, feed_dict={image: batch_images, label: batch_labels})
