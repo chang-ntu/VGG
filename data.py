@@ -50,10 +50,10 @@ class CIFAR(object):
         end = self._current_index
         if self._current_index >= len(self.train_images):
             self._current_index = 0
-        return self.train_images[start:end]/255.0, np.array([self.dense_to_one_hot(x) for x in self.train_labels[start:end]])
+        return self.train_images[start:end]/255.0, np.array([self.dense_to_one_hot(x) for x in self.train_labels[start: end]])
 
     def test_batch(self, batch_size):
         start = self._test_index
         self._test_index += batch_size
         end = self._test_index
-        return self.test_images[start:end]/255.0, np.array([self.dense_to_one_hot(x) for x in self.test_labels[start:end]])
+        return self.test_images[start:end]/255.0, np.array([self.dense_to_one_hot(x) for x in self.test_labels[start: end]])
