@@ -10,9 +10,10 @@ import tensorflow as tf
 import data as dataset
 
 learning_rate = 0.0001
-training_iterations = 50
-batch_size = 16
-show_step = 10
+
+tf.app.flags.DEFINE_string('data_path', '', 'Enter data (CIFAR-100) path')
+tf.app.flags.DEFINE_integer('epoch', 10, 'Enter the epoches to train the network')
+tf.app.flags.DEFINE_integer('batch_size', 32, 'Enter the batch size')
 
 image_size = 32 * 32 * 3
 image_classes = 100
@@ -81,6 +82,7 @@ def softmax(name, x, weights, bias):
 def dump_parameters(x):
     print("[Shape]%s" % (x.shape))
 
+
 parameters = {
     # stage 1
     'conv_1_bias': init_bias(64),
@@ -128,6 +130,10 @@ parameters = {
     'softmax_bias': init_bias(100),
 
 }
+
+
+FLAGS = tf.app.flags.FLAGS
+
 
 with tf.name_scope('reshape'):
     x = tf.reshape(image, shape=[-1, 32, 32, 3])
@@ -200,16 +206,18 @@ with tf.name_scope('optimizer'):
 
 init = tf.global_variables_initializer()
 # path = '/home/jurh/disk/temp/cifar100/cifar-100-python/'
-path = '/Users/vic/Dev/DeepLearning/Paddle/DeepLearningWithPaddle/GoogLeNet/data/'
+# path = '/Users/vic/Dev/DeepLearning/Paddle/DeepLearningWithPaddle/GoogLeNet/data/'
+path = FLAGS.data_path
 cifar = dataset.CIFAR(path + 'train', path + 'test')
+
 
 with tf.Session() as sess:
     sess.run(init)
     step = 1
-    while step <= training_iterations:
+    while step <= FLAGS.epoch:
         loss = 0
-        for i in range(1+50000/batch_size):
-            batch_images, batch_labels = cifar.next_batch(batch_size)
+        for i in range(1+50000/FLAGS.batch_size):
+            batch_images, batch_labels = cifar.next_batch(FLAGS.batch_size)
             train_step.run(feed_dict={image: batch_images, label: batch_labels})
             loss += sess.run(cross_entropy, feed_dict={image: batch_images, label: batch_labels})
 
@@ -217,7 +225,7 @@ with tf.Session() as sess:
                 train_accuracy = accuracy.eval(feed_dict={image: batch_images, label: batch_labels})
                 print("Epoch: %s Batch: %s Loss: %s Accuracy: %s" % (step, i, loss/(i+1), train_accuracy))
 
-        batch_test_images, batch_test_labels = cifar.test_batch(16)
+        batch_test_images, batch_test_labels = cifar.test_batch(FLAGS.batch_size)
         test_accuracy = accuracy.eval(feed_dict={image: batch_test_images, label: batch_test_labels})
         print("[Testing Accuracy]: %.3f" % test_accuracy)
         step += 1
